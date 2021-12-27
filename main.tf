@@ -100,5 +100,34 @@ resource "aws_subnet" "db_subnet_ha" {
 # Create public route table
 # ------------------------------------------------------------
 resource "aws_route_table" "rtb_public" {
-    vpc_ic = "${aws_vpc.default.id}"
+    vpc_id = "${aws_vpc.default.id}"
+    route {
+        cidr_block = "0.0.0.0/0"
+        gateway_id = "${aws_internet_gateway.igw.id}"
+    }
+
+    tags   = local.tags
 }
+resource "aws_route_table_association" "rta_web_subnet" {
+    subnet_id = aws_subnet.web_subnet.id
+    route_table_id = aws_route_table.rtb_public.id
+}
+
+resource "aws_route_table_association" "rta_web_subnet_ha" {
+    subnet_id = aws_subnet.web_subnet_ha.id
+    route_table_id = aws_route_table.rtb_public.id
+}
+
+resource "aws_route_table_association" "rta_app_subnet" {
+    subnet_id = aws_subnet.app_subnet.id
+    route_table_id = aws_route_table.rtb_public.id
+}
+
+resource "aws_route_table_association" "rta_app_subnet_ha" {
+    subnet_id = aws_subnet.app_subnet_ha.id
+    route_table_id = aws_route_table.rtb_public.id
+}
+
+# ------------------------------------------------------------
+# Create AWS Security Group
+# ------------------------------------------------------------

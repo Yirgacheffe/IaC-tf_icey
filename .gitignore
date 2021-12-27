@@ -30,3 +30,6 @@ override.tf.json
 
 # Mac OS folder file
 .DS_Store
+
+# Ignore terraform hidden files
+.terraform.*
