@@ -1,15 +1,6 @@
-# 1. Create VPC
-# 2. Internet gateway associated with VPC
-# 3. Subnet inside VPC
-# 4. Route Table inside VPC with a route that directs internet-bound traffic to the internet gateway
-# 5. Route table association with our subnet to make it a public subnet
-# 6. Security group inside VPC
-# 7. Key pair used for SSH access
-# 8. EC2 instance inside our public subnet with an associated security group and a generated key pair
-
 # Create terraform template of AWS Provider to demo a solution
 provider "aws" {
-    region  = "${var.aws_region}"
+    region     = "${var.aws_region}"
 }
 
 # ------------------------------------------------------------
@@ -25,6 +16,9 @@ locals {
     }
     
     tags = merge(var.resource_tags, local.required_tags)
+
+    zone_a = "${var.aws_region}a"
+    zone_b = "${var.aws_region}b"
 }
 
 # ------------------------------------------------------------
@@ -44,7 +38,7 @@ resource "aws_subnet" "web_subnet" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.10.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.region}a"
+    availability_zone       = "${local.zone_a}"
     tags                    = local.tags
 }
 
@@ -52,7 +46,7 @@ resource "aws_subnet" "web_subnet_ha" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.20.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.region}b"
+    availability_zone       = "${local.zone_b}"
     tags                    = local.tags
 }
 
@@ -60,7 +54,7 @@ resource "aws_subnet" "app_subnet" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.40.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.region}a"
+    availability_zone       = "${local.zone_a}"
     tags                    = local.tags
 }
 
@@ -68,7 +62,7 @@ resource "aws_subnet" "app_subnet_ha" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.50.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.region}b"
+    availability_zone       = "${local.zone_b}"
     tags                    = local.tags
 }
 
@@ -76,7 +70,7 @@ resource "aws_subnet" "db_subnet" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.60.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.region}a"
+    availability_zone       = "${local.zone_a}"
     tags                    = local.tags
 }
 
@@ -84,7 +78,7 @@ resource "aws_subnet" "db_subnet_ha" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.70.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.region}b"
+    availability_zone       = "${local.zone_b}"
     tags                    = local.tags
 }
 
@@ -219,7 +213,7 @@ resource "aws_autoscaling_group" "web_as_grp" {
     vpc_zone_identifier = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
 
     launch_template {
-        id = aws_launch_template.web_lt
+        id = "${aws_launch_template.web_lt.id}"
         version = "$Latest"
     }
 }
@@ -369,7 +363,7 @@ resource "aws_db_instance" "db_inst_mysql" {
 
     name            = "Icey_DB"
     username        = "dbadmin"
-    password        = "set-your-own-password!"
+    password        = "<set-your-own-password!>"
     port            = 3306
     
     storage_type    = "gp2"
