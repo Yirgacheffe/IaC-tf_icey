@@ -118,16 +118,80 @@ resource "aws_route_table_association" "rta_web_subnet_ha" {
     route_table_id = aws_route_table.rtb_public.id
 }
 
-resource "aws_route_table_association" "rta_app_subnet" {
-    subnet_id = aws_subnet.app_subnet.id
-    route_table_id = aws_route_table.rtb_public.id
+# resource "aws_route_table_association" "rta_app_subnet" {
+#    subnet_id = aws_subnet.app_subnet.id
+#    route_table_id = aws_route_table.rtb_public.id
+# }
+
+# resource "aws_route_table_association" "rta_app_subnet_ha" {
+#    subnet_id = aws_subnet.app_subnet_ha.id
+#    route_table_id = aws_route_table.rtb_public.id
+# }
+
+# ------------------------------------------------------------
+# Create AWS Security Group - Web
+# ------------------------------------------------------------
+resource "aws_security_group" "sg_tls" {
+    name        = "tls_sg"
+    description = "Allow TLS inbound traffic"
+    vpc_id      = aws_vpc.default.id
+
+    ingress {
+        description = "TLS from VPC"
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_blocks = [aws_vpc.default.cidr_block]
+    }
+
+    egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    tags = local.tags
 }
 
-resource "aws_route_table_association" "rta_app_subnet_ha" {
-    subnet_id = aws_subnet.app_subnet_ha.id
-    route_table_id = aws_route_table.rtb_public.id
+resource "aws_security_group" "sg_http" {
+    name        = "http_sg"
+    description = "Allow HTTP inbound traffic"
+    vpc_id      = aws_vpc.default.id
+
+    ingress {
+        description = "TLS from VPC"
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_blocks = [aws_vpc.default.cidr_block]
+    }
+
+    egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    tags = local.tags
 }
 
 # ------------------------------------------------------------
-# Create AWS Security Group
+# Create AWS Instance for Web server
+# Ubuntu Server 20.04 LTS (HVM), SSD Volume Type
 # ------------------------------------------------------------
+resource "aws_instance" "web_az_a" {
+    ami                    = "ami-055d15d9cfddf7bd3"
+    instance_type          = "t2.micro"
+    vpc_security_group_ids = ["${aws_security_group.sg_tls.id}", "${aws_security_group.sg_http.id}"]
+    subnet_id              = "${aws_subnet.web_subnet.id}"
+    
+}
+
+resource "aws_instance" "web_az_b" {
+    ami                    = "ami-055d15d9cfddf7bd3"
+    instance_type          = "t2.micro"
+    vpc_security_group_ids = ["${aws_security_group.sg_tls.id}", "${aws_security_group.sg_http.id}"]
+    subnet_id              = "${aws_subnet.web_subnet_ha.id}"    
+}
