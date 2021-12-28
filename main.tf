@@ -38,35 +38,11 @@ resource "aws_vpc" "default" {
 }
 
 # ------------------------------------------------------------
-# Internet gateway added inside VPC
-# ------------------------------------------------------------
-resource "aws_internet_gateway" "igw" {
-    vpc_id = "${aws_vpc.default.id}"
-    tags   = local.tags
-}
-
-# ------------------------------------------------------------
 # Create subnet on available zone (a, b)
 # ------------------------------------------------------------
 resource "aws_subnet" "web_subnet" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.10.0/24"
-    map_public_ip_on_launch = true
-    availability_zone       = "${local.region}a"
-    tags                    = local.tags
-}
-
-resource "aws_subnet" "app_subnet" {
-    vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.40.0/24"
-    map_public_ip_on_launch = true
-    availability_zone       = "${local.region}a"
-    tags                    = local.tags
-}
-
-resource "aws_subnet" "db_subnet" {
-    vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.60.0/24"
     map_public_ip_on_launch = true
     availability_zone       = "${local.region}a"
     tags                    = local.tags
@@ -80,11 +56,27 @@ resource "aws_subnet" "web_subnet_ha" {
     tags                    = local.tags
 }
 
+resource "aws_subnet" "app_subnet" {
+    vpc_id                  = "${aws_vpc.default.id}"
+    cidr_block              = "20.10.40.0/24"
+    map_public_ip_on_launch = true
+    availability_zone       = "${local.region}a"
+    tags                    = local.tags
+}
+
 resource "aws_subnet" "app_subnet_ha" {
     vpc_id                  = "${aws_vpc.default.id}"
     cidr_block              = "20.10.50.0/24"
     map_public_ip_on_launch = true
     availability_zone       = "${local.region}b"
+    tags                    = local.tags
+}
+
+resource "aws_subnet" "db_subnet" {
+    vpc_id                  = "${aws_vpc.default.id}"
+    cidr_block              = "20.10.60.0/24"
+    map_public_ip_on_launch = true
+    availability_zone       = "${local.region}a"
     tags                    = local.tags
 }
 
@@ -94,6 +86,14 @@ resource "aws_subnet" "db_subnet_ha" {
     map_public_ip_on_launch = true
     availability_zone       = "${local.region}b"
     tags                    = local.tags
+}
+
+# ------------------------------------------------------------
+# Internet gateway added inside VPC
+# ------------------------------------------------------------
+resource "aws_internet_gateway" "igw" {
+    vpc_id = "${aws_vpc.default.id}"
+    tags   = local.tags
 }
 
 # ------------------------------------------------------------
@@ -129,7 +129,7 @@ resource "aws_route_table_association" "rta_web_subnet_ha" {
 # }
 
 # ------------------------------------------------------------
-# Create AWS Security Group - Web
+# Create AWS Security Group
 # ------------------------------------------------------------
 resource "aws_security_group" "sg_tls" {
     name        = "tls_sg"
@@ -178,20 +178,70 @@ resource "aws_security_group" "sg_http" {
 }
 
 # ------------------------------------------------------------
-# Create AWS Instance for Web server
+# Create AWS Instance for Web APP & DB server
 # Ubuntu Server 20.04 LTS (HVM), SSD Volume Type
 # ------------------------------------------------------------
 resource "aws_instance" "web_az_a" {
-    ami                    = "ami-055d15d9cfddf7bd3"
-    instance_type          = "t2.micro"
+    instance_type          = "${var.inst_type}"
+    ami                    = "${var.inst_ami}"
     vpc_security_group_ids = ["${aws_security_group.sg_tls.id}", "${aws_security_group.sg_http.id}"]
     subnet_id              = "${aws_subnet.web_subnet.id}"
-    
+
+    tags = local.tags
 }
 
 resource "aws_instance" "web_az_b" {
-    ami                    = "ami-055d15d9cfddf7bd3"
-    instance_type          = "t2.micro"
+    instance_type          = "${var.inst_type}"
+    ami                    = "${var.inst_ami}"
     vpc_security_group_ids = ["${aws_security_group.sg_tls.id}", "${aws_security_group.sg_http.id}"]
-    subnet_id              = "${aws_subnet.web_subnet_ha.id}"    
+    subnet_id              = "${aws_subnet.web_subnet_ha.id}"
+
+    tags = local.tags
+}
+
+resource "aws_instance" "app_az_a" {
+    instance_type          = "${var.inst_type}"
+    ami                    = "${var.inst_ami}"
+    subnet_id              = "${aws_subnet.app_subnet.id}"
+    
+    monitoring = true
+    tags       = local.tags
+    # vpc_security_group_ids = ["${aws_security_group.sg_tls.id}", "${aws_security_group.sg_http.id}"]
+    
+}
+
+resource "aws_instance" "app_az_b" {
+    instance_type          = "${var.inst_type}"
+    ami                    = "${var.inst_ami}"
+    subnet_id              = "${aws_subnet.app_subnet_ha.id}"
+
+    monitoring = true
+    tags       = local.tags
+    # vpc_security_group_ids = ["${aws_security_group.sg_tls.id}", "${aws_security_group.sg_http.id}"]
+}
+
+
+resource "aws_db_subnet_group" "default" {
+    name       = "icey_db_subnet"
+    subnet_ids = ["${aws_subnet.db_subnet.id}", "${aws_subnet.db_subnet_ha.id}"]
+}
+
+resource "aws_db_instance" "mysql" {
+    identifier             = "mysql-icey01"
+    engine                 = "mysql"
+    engine_version         = "5.7.19"
+    instance_class         = "db.t2.small"
+
+    name                   = "Icey_DB"
+    port                   = "3306"
+    multi_az               = true
+
+    maintenance_window     = "Mon:01:00-Mon:03:00"
+    monitoring_interval    = 30
+    allocated_storage      = 10
+    max_allocated_storage  = 50
+
+    db_subnet_group_name   = "${aws_db_subnet_group.default.name}"
+    vpc_security_group_ids = []
+    tags = local.tags
 }

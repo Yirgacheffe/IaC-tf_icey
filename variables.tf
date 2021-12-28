@@ -27,18 +27,20 @@ variable "resource_tags" {
     }
 }
 
-variable "instance_type" {
-    description = "Type for AWS EC2 instance."
-    default     = "t1.micro"
-}
-
 variable "vpc_cidr_block" {
     description = "Default CIDR block for VPC settings."
     type        = string
     default     = "20.10.0.0/16"
 }
 
-# variable "instance_ami" {
-#    description = "AMI for AWS EC2 instance."
-#    default     = "ami-0cf31d971a3ca20d6"
-# }
+variable "inst_ami" {
+    description = "AMI for AWS EC2 instance."
+    default     = "ami-0cf31d971a3ca20d6"
+}
+
+variable "inst_type" {
+    description = "Type for AWS EC2 instance."
+    default     = "t2.micro"
+}
+
+# ------------------------------------------------------------
