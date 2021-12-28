@@ -19,6 +19,21 @@ locals {
 
     zone_a = "${var.aws_region}a"
     zone_b = "${var.aws_region}b"
+
+    az_pub_subnet = {
+        "${local.zone_a}" = "20.10.10.0/24"
+        "${local.zone_b}" = "20.10.20.0/24"
+    }
+
+    az_prv_subnet = {
+        "${local.zone_a}" = "20.10.40.0/24"
+        "${local.zone_b}" = "20.10.50.0/24"
+    }
+
+    az_dbs_subnet = {
+        "${local.zone_a}" = "20.10.70.0/24"
+        "${local.zone_b}" = "20.10.80.0/24"
+    }
 }
 
 # ------------------------------------------------------------
@@ -34,51 +49,33 @@ resource "aws_vpc" "default" {
 # ------------------------------------------------------------
 # Create subnet on available zone (a, b)
 # ------------------------------------------------------------
-resource "aws_subnet" "web_subnet" {
+resource "aws_subnet" "public_subnet" {
+    for_each = local.az_pub_subnet
+
+    cidr_block              = each.value
+    availability_zone       = each.key
     vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.10.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.zone_a}"
     tags                    = local.tags
 }
 
-resource "aws_subnet" "web_subnet_ha" {
+resource "aws_subnet" "private_subnet" {
+    for_each = local.az_prv_subnet
+
+    cidr_block              = each.value
+    availability_zone       = each.key
     vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.20.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.zone_b}"
     tags                    = local.tags
 }
 
-resource "aws_subnet" "app_subnet" {
-    vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.40.0/24"
-    map_public_ip_on_launch = true
-    availability_zone       = "${local.zone_a}"
-    tags                    = local.tags
-}
+resource "aws_subnet" "database_subnet" {
+    for_each = local.az_dbs_subnet
 
-resource "aws_subnet" "app_subnet_ha" {
+    cidr_block              = each.value
+    availability_zone       = each.key
     vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.50.0/24"
     map_public_ip_on_launch = true
-    availability_zone       = "${local.zone_b}"
-    tags                    = local.tags
-}
-
-resource "aws_subnet" "db_subnet" {
-    vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.60.0/24"
-    map_public_ip_on_launch = true
-    availability_zone       = "${local.zone_a}"
-    tags                    = local.tags
-}
-
-resource "aws_subnet" "db_subnet_ha" {
-    vpc_id                  = "${aws_vpc.default.id}"
-    cidr_block              = "20.10.70.0/24"
-    map_public_ip_on_launch = true
-    availability_zone       = "${local.zone_b}"
     tags                    = local.tags
 }
 
@@ -103,12 +100,9 @@ resource "aws_route_table" "rtb_public" {
     tags   = local.tags
 }
 resource "aws_route_table_association" "rta_web_subnet" {
-    subnet_id = aws_subnet.web_subnet.id
-    route_table_id = aws_route_table.rtb_public.id
-}
+    for_each = local.az_pub_subnet
 
-resource "aws_route_table_association" "rta_web_subnet_ha" {
-    subnet_id = aws_subnet.web_subnet_ha.id
+    subnet_id = aws_subnet.public_subnet[each.key].id
     route_table_id = aws_route_table.rtb_public.id
 }
 
@@ -140,10 +134,12 @@ resource "aws_security_group" "web_lb_sg" {
 resource "aws_lb" "web_lb" {
     name               = "web-lb"
     load_balancer_type = "application"
-    internal           = false
+    
 
-    subnets            = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
+    internal           = false
+    subnets            = [for value in aws_subnet.public_subnet: value.id]
     security_groups    = [aws_security_group.web_lb_sg.id]
+    # subnets            = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
 }
 
 resource "aws_lb_target_group" "web_target_grp" {
@@ -210,7 +206,8 @@ resource "aws_autoscaling_group" "web_as_grp" {
     min_size         = 0 # 1
 
     target_group_arns   = ["${aws_lb_target_group.web_target_grp.arn}"]
-    vpc_zone_identifier = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
+    vpc_zone_identifier = [for value in aws_subnet.public_subnet: value.id]
+    # vpc_zone_identifier = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
 
     launch_template {
         id = "${aws_launch_template.web_lt.id}"
@@ -227,10 +224,11 @@ resource "aws_security_group" "app_lb_sg" {
     vpc_id = "${aws_vpc.default.id}"
 
     ingress {
-        from_port   = 80
-        to_port     = 80
-        protocol    = "tcp"
-        cidr_blocks = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
+        from_port       = 80
+        to_port         = 80
+        protocol        = "tcp"
+        security_groups = [aws_security_group.web_inst_sg.id]
+        #cidr_blocks = [for value in aws_subnet.public_subnet: value.id]
     }
 
     egress {
@@ -248,7 +246,7 @@ resource "aws_lb" "app_lb" {
     load_balancer_type = "application"
     internal           = false
 
-    subnets            = ["${aws_subnet.app_subnet.id}", "${aws_subnet.app_subnet_ha.id}"]
+    subnets            = [for value in aws_subnet.private_subnet: value.id]
     security_groups    = ["${aws_security_group.app_lb_sg.id}"]
 }
 
@@ -314,7 +312,7 @@ resource "aws_autoscaling_group" "app_as_grp" {
     min_size         = 0
 
     target_group_arns   = ["${aws_lb_target_group.app_target_grp.arn}"]
-    vpc_zone_identifier = ["${aws_subnet.app_subnet.id}", "${aws_subnet.app_subnet_ha.id}"]
+    vpc_zone_identifier = [for value in aws_subnet.private_subnet: value.id]
 
     launch_template {
         id      = "${aws_launch_template.app_lt.id}"
@@ -327,7 +325,7 @@ resource "aws_autoscaling_group" "app_as_grp" {
 # ------------------------------------------------------------
 resource "aws_db_subnet_group" "db_subnet_grp" {
     name       = "db-subnet-grp"
-    subnet_ids = ["${aws_subnet.db_subnet.id}", "${aws_subnet.db_subnet_ha.id}"]
+    subnet_ids = [for value in aws_subnet.database_subnet: value.id]
     tags       = local.tags
 }
 
