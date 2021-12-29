@@ -54,19 +54,19 @@ variable "vpc_cidr_block" {
 }
 
 variable "db_name" {
-    description = "Database name, provide from ENV varialbes"
+    description = "Database name, provide from ENV."
     type        = string
     default     = "icey_DB"
 }
 
 variable "db_username" {
-    description = "DB 'username', provide from ENV variables"
+    description = "DB 'username', provide from ENV."
     type        = string
     default     = "admin"
 }
 
 variable "db_password" {
-    description = "DB 'password', provide from ENV variables"
+    description = "DB 'password', provide from ENV."
     type        = string
 }
 # ------------------------------------------------------------
