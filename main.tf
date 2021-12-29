@@ -87,9 +87,6 @@ resource "aws_internet_gateway" "igw" {
     tags   = local.tags
 }
 
-# ------------------------------------------------------------
-# Create public route table
-# ------------------------------------------------------------
 resource "aws_route_table" "rtb_public" {
     vpc_id = "${aws_vpc.default.id}"
     route {
@@ -99,6 +96,7 @@ resource "aws_route_table" "rtb_public" {
 
     tags   = local.tags
 }
+
 resource "aws_route_table_association" "rta_web_subnet" {
     for_each = local.az_pub_subnet
 
@@ -354,18 +352,18 @@ resource "aws_security_group" "db_inst_sg" {
 
 resource "aws_db_instance" "db_inst_mysql" {
 
-    identifier      = "mysql-icey"    
+    identifier      = "mysql-icey-1"
     engine          = "mysql"
-    engine_version  = "5.7.19"
-    instance_class  = "db.t2.small"
+    engine_version  = "8.0.23"
+    instance_class  = "db.t2.micro"
 
-    name            = "Icey_DB"
-    username        = "dbadmin"
-    password        = "<set-your-own-password!>"
+    name            = "${var.db_name}"
+    username        = "${var.db_username}"
+    password        = "${var.db_password}"
     port            = 3306
     
     storage_type    = "gp2"
-    multi_az        = true
+    # multi_az        = true
 
     db_subnet_group_name   = "${aws_db_subnet_group.db_subnet_grp.name}"
 
@@ -381,6 +379,23 @@ resource "aws_db_instance" "db_inst_mysql" {
 
     vpc_security_group_ids = ["${aws_security_group.db_inst_sg.id}"]
 
+}
+
+# ------------------------------------------------------------
+# Create AWS Instance for Elasticache
+# ------------------------------------------------------------
+resource "aws_elasticache_cluster" "cache_cluster" {
+    cluster_id           = "redis-cluster"
+    engine               = "redis"
+
+    node_type            = "cache.t2.micro"
+    engine_version       = "6.x"
+    num_cache_nodes      = 1
+    port                 = 6379
+    parameter_group_name = "default.redis6.x"
+    subnet_group_name    = "${aws_db_subnet_group.db_subnet_grp.name}"
+
+    tags                 = local.tags
 }
 
 # ------------------------------------------------------------
