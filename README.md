@@ -39,5 +39,6 @@ No inputs.
 
 ## Enchancement
 
-- Environment variables, key variables
-- Outputs after apply
+- Environment variables, key variables.
+- Outputs after apply.
+- Route53, CloudFront, Amazon S3, S3 Glacier, CloudWatch not include by default.
