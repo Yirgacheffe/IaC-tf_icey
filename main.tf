@@ -384,6 +384,27 @@ resource "aws_db_instance" "db_inst_mysql" {
 # ------------------------------------------------------------
 # Create AWS Instance for Elasticache
 # ------------------------------------------------------------
+resource "aws_security_group" "cache_inst_sg" {
+    name        = "redis-sg"
+    description = "Redis instance server"
+
+    vpc_id      = "${aws_vpc.default.id}"
+
+    ingress {
+        from_port       = 6379
+        to_port         = 6379
+        protocol        = "tcp"
+        security_groups = ["${aws_security_group.app_inst_sg.id}"]
+    }
+
+    egress {
+        from_port       = 0
+        to_port         = 0
+        protocol        = "-1"
+        cidr_blocks     = ["0.0.0.0/0"]
+    }
+}
+
 resource "aws_elasticache_cluster" "cache_cluster" {
     cluster_id           = "redis-cluster"
     engine               = "redis"
@@ -395,6 +416,7 @@ resource "aws_elasticache_cluster" "cache_cluster" {
     parameter_group_name = "default.redis6.x"
     subnet_group_name    = "${aws_db_subnet_group.db_subnet_grp.name}"
 
+    security_group_ids   = ["${aws_security_group.cache_inst_sg.id}"]
     tags                 = local.tags
 }
 
