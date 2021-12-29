@@ -132,12 +132,10 @@ resource "aws_security_group" "web_lb_sg" {
 resource "aws_lb" "web_lb" {
     name               = "web-lb"
     load_balancer_type = "application"
-    
-
     internal           = false
+
     subnets            = [for value in aws_subnet.public_subnet: value.id]
     security_groups    = [aws_security_group.web_lb_sg.id]
-    # subnets            = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
 }
 
 resource "aws_lb_target_group" "web_target_grp" {
@@ -172,11 +170,16 @@ resource "aws_security_group" "web_inst_sg" {
     vpc_id      = aws_vpc.default.id
 
     ingress {
-        description = "TLS from VPC"
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    ingress {
         from_port   = 80
         to_port     = 80
         protocol    = "tcp"
-        # cidr_blocks = [aws_vpc.default.cidr_block] # include web lb ?
         security_groups = [aws_security_group.web_lb_sg.id]
     }
 
@@ -205,7 +208,6 @@ resource "aws_autoscaling_group" "web_as_grp" {
 
     target_group_arns   = ["${aws_lb_target_group.web_target_grp.arn}"]
     vpc_zone_identifier = [for value in aws_subnet.public_subnet: value.id]
-    # vpc_zone_identifier = ["${aws_subnet.web_subnet.id}", "${aws_subnet.web_subnet_ha.id}"]
 
     launch_template {
         id = "${aws_launch_template.web_lt.id}"
@@ -226,7 +228,6 @@ resource "aws_security_group" "app_lb_sg" {
         to_port         = 80
         protocol        = "tcp"
         security_groups = [aws_security_group.web_inst_sg.id]
-        #cidr_blocks = [for value in aws_subnet.public_subnet: value.id]
     }
 
     egress {
@@ -279,6 +280,14 @@ resource "aws_security_group" "app_inst_sg" {
     description = "Allow HTTP inbound traffic to Application server"
     vpc_id      = aws_vpc.default.id
 
+    // SSH access rules for connect from outside
+    ingress {
+        from_port       = 22
+        to_port         = 22
+        protocol        = "tcp"
+        cidr_blocks     = ["0.0.0.0/0"]
+    }
+
     ingress {
         from_port       = 80
         to_port         = 80
@@ -330,7 +339,6 @@ resource "aws_db_subnet_group" "db_subnet_grp" {
 resource "aws_security_group" "db_inst_sg" {
     name        = "mysql-db-sg"
     description = "RDS Mysql instance server"
-
     vpc_id      = "${aws_vpc.default.id}"
 
     ingress {
@@ -338,8 +346,6 @@ resource "aws_security_group" "db_inst_sg" {
         to_port         = 3306
         protocol        = "tcp"
         security_groups = ["${aws_security_group.app_inst_sg.id}"]
-
-        # cidr_blocks   = ["${aws_subnet.app_subnet.id}", "${aws_subnet.app_subnet_ha.id}"]
     }
 
     egress {
