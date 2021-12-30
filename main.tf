@@ -89,6 +89,7 @@ resource "aws_internet_gateway" "igw" {
 
 resource "aws_route_table" "rtb_public" {
     vpc_id = "${aws_vpc.default.id}"
+
     route {
         cidr_block = "0.0.0.0/0"
         gateway_id = "${aws_internet_gateway.igw.id}"
@@ -170,13 +171,6 @@ resource "aws_security_group" "web_inst_sg" {
     vpc_id      = aws_vpc.default.id
 
     ingress {
-        from_port   = 22
-        to_port     = 22
-        protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    ingress {
         from_port   = 80
         to_port     = 80
         protocol    = "tcp"
@@ -199,12 +193,14 @@ resource "aws_launch_template" "web_lt" {
     image_id       = "${var.inst_ami}"
 
     vpc_security_group_ids = ["${aws_security_group.web_inst_sg.id}"]
+
+    user_data = filebase64("${path.module}/web-init.sh")
 }
 
 resource "aws_autoscaling_group" "web_as_grp" {
-    desired_capacity = 0 # 1
-    max_size         = 0 # 2
-    min_size         = 0 # 1
+    desired_capacity = 1 # 1
+    max_size         = 2 # 2
+    min_size         = 1 # 1
 
     target_group_arns   = ["${aws_lb_target_group.web_target_grp.arn}"]
     vpc_zone_identifier = [for value in aws_subnet.public_subnet: value.id]
@@ -280,14 +276,6 @@ resource "aws_security_group" "app_inst_sg" {
     description = "Allow HTTP inbound traffic to Application server"
     vpc_id      = aws_vpc.default.id
 
-    // SSH access rules for connect from outside
-    ingress {
-        from_port       = 22
-        to_port         = 22
-        protocol        = "tcp"
-        cidr_blocks     = ["0.0.0.0/0"]
-    }
-
     ingress {
         from_port       = 80
         to_port         = 80
@@ -314,9 +302,9 @@ resource "aws_launch_template" "app_lt" {
 }
 
 resource "aws_autoscaling_group" "app_as_grp" {
-    desired_capacity = 0
-    max_size         = 0
-    min_size         = 0
+    desired_capacity = 1
+    max_size         = 2
+    min_size         = 1
 
     target_group_arns   = ["${aws_lb_target_group.app_target_grp.arn}"]
     vpc_zone_identifier = [for value in aws_subnet.private_subnet: value.id]
@@ -378,7 +366,7 @@ resource "aws_db_instance" "db_inst_mysql" {
     allocated_storage       = 10    # Gigabytes
     max_allocated_storage   = 50
     
-    backup_retention_period = 3
+    # backup_retention_period = 3
     storage_encrypted       = false # demo purpose
     skip_final_snapshot     = true
 

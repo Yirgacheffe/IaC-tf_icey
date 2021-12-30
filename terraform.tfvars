@@ -7,7 +7,7 @@
 
 # region and instance settings
 aws_region     = "ap-southeast-1"
-inst_ami       = "ami-0dc5785603ad4ff54"
+inst_ami       = "ami-055d15d9cfddf7bd3" # ubuntu
 inst_type      = "t2.micro"
 
 # ------------------------------------------------------------
