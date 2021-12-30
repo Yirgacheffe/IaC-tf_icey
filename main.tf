@@ -323,7 +323,7 @@ resource "aws_autoscaling_group" "app_as_grp" {
 
     launch_template {
         id      = "${aws_launch_template.app_lt.id}"
-        version = "%Latest"
+        version = "$Latest"
     }
 }
 
@@ -369,22 +369,21 @@ resource "aws_db_instance" "db_inst_mysql" {
     port            = 3306
     
     storage_type    = "gp2"
-    # multi_az        = true
+    # multi_az      = true
 
-    db_subnet_group_name   = "${aws_db_subnet_group.db_subnet_grp.name}"
+    db_subnet_group_name    = "${aws_db_subnet_group.db_subnet_grp.name}"
 
-    maintenance_window     = "Mon:01:00-Mon:03:00"
-    monitoring_interval    = 30
+    maintenance_window      = "Mon:01:00-Mon:03:00"
+    allocated_storage       = 10    # Gigabytes
+    max_allocated_storage   = 50
+    
+    backup_retention_period = 3
+    storage_encrypted       = false # demo purpose
+    skip_final_snapshot     = true
 
-    allocated_storage      = 10 # Gigabytes
-    max_allocated_storage  = 50
-    character_set_name     = "utf8"
-
-    storage_encrypted      = true
-    skip_final_snapshot    = true
-
-    vpc_security_group_ids = ["${aws_security_group.db_inst_sg.id}"]
-
+    vpc_security_group_ids  = ["${aws_security_group.db_inst_sg.id}"]
+    # monitoring_interval   = 30
+    tags                    = local.tags
 }
 
 # ------------------------------------------------------------
@@ -411,6 +410,13 @@ resource "aws_security_group" "cache_inst_sg" {
     }
 }
 
+resource "aws_elasticache_subnet_group" "cache_subnet_grp" {
+    name       = "cache-subnet-grp"
+    subnet_ids = [for value in aws_subnet.database_subnet: value.id]
+    tags       = local.tags
+}
+
+
 resource "aws_elasticache_cluster" "cache_cluster" {
     cluster_id           = "redis-cluster"
     engine               = "redis"
@@ -420,7 +426,7 @@ resource "aws_elasticache_cluster" "cache_cluster" {
     num_cache_nodes      = 1
     port                 = 6379
     parameter_group_name = "default.redis6.x"
-    subnet_group_name    = "${aws_db_subnet_group.db_subnet_grp.name}"
+    subnet_group_name    = "${aws_elasticache_subnet_group.cache_subnet_grp.name}"
 
     security_group_ids   = ["${aws_security_group.cache_inst_sg.id}"]
     tags                 = local.tags

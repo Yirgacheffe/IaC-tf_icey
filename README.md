@@ -14,7 +14,7 @@ $ terraform plan
 $ terraform apply
 ```
 
-Note: this project create resources which can cost money (AWS Elastic IP, for example). Run `terraform destroy` when you don't need these resources.
+Note: this project create resources which may cost money (AWS Elastic IP, for example). Run `terraform destroy` when you don't need these resources.
 
 ## Requirements
 
@@ -25,10 +25,12 @@ Note: this project create resources which can cost money (AWS Elastic IP, for ex
 
 ## Inputs
 
-| Name | Description |
-|------|-------------|
+| Name         | Description                   | Mandatory | Default   |
+|--------------|-------------------------------|-----------|-----------|
+| DB Name      | Mysql database name.          | No        | `icey_DB` |
+| Username     | Mysql database `username`.    | No        | `admin`   |
+| Password     | Mysql database `password`.    | Yes       |           |
 
-No inputs.
 
 ## Outputs
 

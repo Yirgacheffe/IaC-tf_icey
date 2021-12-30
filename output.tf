@@ -22,14 +22,14 @@ output "database_subnet" {
 }
 
 # Instance Address
-output "database_instance_address" {
-    description = "The DB instance address"
-    value       = aws_db_instance.db_inst_mysql.address
+output "database_inst_endpoint" {
+    description = "The DB instance endpoint"
+    value       = aws_db_instance.db_inst_mysql.endpoint
 }
 
 output "cache_cluster_address" {
     description = "The Cache Cluster address"
-    value       = aws_elasticache_cluster.cache_cluster.cluster_address
+    value       = aws_elasticache_cluster.cache_cluster.cache_nodes
 }
 
 # Web load balancer dns name
