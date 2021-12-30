@@ -367,8 +367,9 @@ resource "aws_db_instance" "db_inst_mysql" {
     username        = "${var.db_username}"
     password        = "${var.db_password}"
     port            = 3306
-    
     storage_type    = "gp2"
+
+    # set multi_za to true enabled standby mode
     # multi_az      = true
 
     db_subnet_group_name    = "${aws_db_subnet_group.db_subnet_grp.name}"
@@ -426,8 +427,8 @@ resource "aws_elasticache_cluster" "cache_cluster" {
     num_cache_nodes      = 1
     port                 = 6379
     parameter_group_name = "default.redis6.x"
-    subnet_group_name    = "${aws_elasticache_subnet_group.cache_subnet_grp.name}"
 
+    subnet_group_name    = "${aws_elasticache_subnet_group.cache_subnet_grp.name}"
     security_group_ids   = ["${aws_security_group.cache_inst_sg.id}"]
     tags                 = local.tags
 }
