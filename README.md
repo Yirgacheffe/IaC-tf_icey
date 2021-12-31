@@ -34,9 +34,15 @@ Note: this project create resources which may cost money (AWS Elastic IP, for ex
 
 ## Outputs
 
-| Name                                                     | Description       |
-|----------------------------------------------------------|-------------------|
-| <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the VPC |
+| Name                                                                                                       | Description                     |
+|------------------------------------------------------------------------------------------------------------|---------------------------------|
+| <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id)                                                   | The ID of the VPC               |
+| <a name="output_private_subnet"></a> [private\_subnet](#output\_private\_subnet)                           | The IDs of the Private Subnet   |
+| <a name="output_public_subnet"></a> [public\_subnet](#output\_public\_subnet)                              | The IDs of the Public Subnet    |
+| <a name="output_database_subnet"></a> [database\_subnet](#output\_database\_subnet)                        | The IDs of the Database Subnet  |
+| <a name="output_database_inst_endpoint"></a> [database\_inst\_endpoint](#output\_database\_inst\_endpoint) | The Database Instance Endpoint  |
+| <a name="output_cache_cluster_address"></a> [cache\_cluster\_address](#output\_cache\_cluster\_address)    | The cache cluster address       |
+| <a name="output_web_lb_dns"></a> [web\_lb\_dns](#output\_web\_lb\_dns)                                     | The DNS of Web load balancer    |
 
 
 ## Enchancement
