@@ -343,6 +343,23 @@ resource "aws_autoscaling_group" "app_as_grp" {
     }
 }
 
+
+# ------------------------------------------------------------
+# AWS KMS key for DB Instance 
+# ------------------------------------------------------------
+resource "aws_kms_key" "rds" {
+    description              = "Encrypt and decrypt for RDS (mysql instance)"
+    
+    key_usage                = "ENCRYPT_DECRYPT"
+    customer_master_key_spec = "SYMMETRIC_DEFAULT"
+    deletion_window_in_days  = 10
+}
+
+resource "aws_kms_alias" "rds_alias" {
+    name          = "alias/icey-rds"
+    target_key_id = aws_kms_key.rds.key_id
+}
+
 # ------------------------------------------------------------
 # Create AWS Instance for DB instance
 # ------------------------------------------------------------
@@ -394,11 +411,13 @@ resource "aws_db_instance" "db_inst_mysql" {
     allocated_storage       = 10    # Gigabytes
     max_allocated_storage   = 50
     
-    # backup_retention_period = 3
-    storage_encrypted       = true // db.t2.micro not support data encryption
-    skip_final_snapshot     = true
+    # StorageEncrypted set to 'true', KMS key identifier for encrypted
+    storage_encrypted       = true
+    kms_key_id              = aws_kms_key.rds.arn
 
+    skip_final_snapshot     = true
     vpc_security_group_ids  = ["${aws_security_group.db_inst_sg.id}"]
+    
     # monitoring_interval   = 30
     tags                    = local.tags
 }
