@@ -220,9 +220,19 @@ resource "aws_launch_template" "web_lt" {
     instance_type  = "${var.inst_type}"
     image_id       = "${var.inst_ami}"
 
-    vpc_security_group_ids = ["${aws_security_group.web_inst_sg.id}"]
+    ebs_optimized  = true
 
-    user_data = filebase64("${path.module}/http_init.sh")
+    block_device_mappings {
+        device_name = "/dev/sda1"
+
+        ebs {
+            volume_size = 20 // Giga bytes
+            encrypted   = true
+        }
+    }
+
+    vpc_security_group_ids = ["${aws_security_group.web_inst_sg.id}"]
+    user_data              = filebase64("${path.module}/http_init.sh")
 }
 
 resource "aws_autoscaling_group" "web_as_grp" {
@@ -325,6 +335,17 @@ resource "aws_launch_template" "app_lt" {
     name_prefix    = "app-lt"
     instance_type  = "${var.inst_type}"
     image_id       = "${var.inst_ami}"
+
+    ebs_optimized  = true
+    
+    block_device_mappings {
+        device_name = "/dev/sda1"
+
+        ebs {
+            volume_size = 20 // Giga bytes
+            encrypted   = true
+        }
+    }
 
     vpc_security_group_ids = ["${aws_security_group.app_inst_sg.id}"]
 }
