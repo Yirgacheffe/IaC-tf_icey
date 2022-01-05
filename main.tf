@@ -222,7 +222,7 @@ resource "aws_launch_template" "web_lt" {
 
     vpc_security_group_ids = ["${aws_security_group.web_inst_sg.id}"]
 
-    user_data = filebase64("${path.module}/web-init.sh")
+    user_data = filebase64("${path.module}/http_init.sh")
 }
 
 resource "aws_autoscaling_group" "web_as_grp" {

@@ -1,6 +1,6 @@
-# ----------------------------------------------------------------
-# Selft signed certs as no domain name required
-# ----------------------------------------------------------------
+# -----------------------------------------------------------------------
+# Selft signed certs upload to ACM, tls for application load balancer
+# -----------------------------------------------------------------------
 resource "tls_private_key" "icey_key" {
     algorithm = "RSA"
     rsa_bits  = "2048"
@@ -24,4 +24,4 @@ resource "aws_acm_certificate" "default" {
     certificate_body = tls_self_signed_cert.cert.cert_pem
 }
 
-# ----------------------------------------------------------------
+# -----------------------------------------------------------------------
