@@ -110,8 +110,16 @@ resource "aws_route_table_association" "rta_web_subnet" {
 # ------------------------------------------------------------
 resource "aws_security_group" "web_lb_sg" {
     name = "web-lb-sg"
-    description = "Allow HTTP inbound traffic to web Load Balancer"
+    description = "TLS inbound traffic to web Load Balancer"
+
     vpc_id = "${aws_vpc.default.id}"
+
+    ingress {
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 
     ingress {
         from_port   = 80
@@ -131,16 +139,16 @@ resource "aws_security_group" "web_lb_sg" {
 }
 
 resource "aws_lb" "web_lb" {
-    name               = "web-lb"
     load_balancer_type = "application"
-    internal           = false
 
+    name               = "web-lb"
+    internal           = false
     subnets            = [for value in aws_subnet.public_subnet: value.id]
     security_groups    = [aws_security_group.web_lb_sg.id]
 }
 
 resource "aws_lb_target_group" "web_target_grp" {
-    name     = "web-target"
+    name     = "web-target-grp"
     port     = "80"
     protocol = "HTTP"
     vpc_id   = aws_vpc.default.id
@@ -151,14 +159,34 @@ resource "aws_lb_target_group" "web_target_grp" {
     }
 }
 
-resource "aws_lb_listener" "web_listener" {
+resource "aws_lb_listener" "web_https" {
     load_balancer_arn = aws_lb.web_lb.arn
-    port              = "80"
-    protocol          = "HTTP"
+    port              = "443"
+    protocol          = "HTTPS"
+
+    ssl_policy        = "ELBSecurityPolicy-2016-08"
+    certificate_arn   = "${aws_acm_certificate.default.arn}"
 
     default_action {
         type = "forward"
         target_group_arn = "${aws_lb_target_group.web_target_grp.arn}"
+    }
+}
+
+resource "aws_lb_listener" "web_redirect" {
+    load_balancer_arn   = aws_lb.web_lb.arn
+    port                = "80"
+    protocol            = "HTTP"
+
+    default_action {
+        type = "redirect"
+     
+        redirect {
+            protocol    = "HTTPS"
+            port        = "443"
+
+            status_code = "HTTP_301"
+        }
     }
 }
 
@@ -239,7 +267,7 @@ resource "aws_security_group" "app_lb_sg" {
 resource "aws_lb" "app_lb" {
     name               = "app-lb"
     load_balancer_type = "application"
-    internal           = false
+    internal           = true
 
     subnets            = [for value in aws_subnet.private_subnet: value.id]
     security_groups    = ["${aws_security_group.app_lb_sg.id}"]
@@ -349,7 +377,7 @@ resource "aws_db_instance" "db_inst_mysql" {
     identifier      = "mysql-icey-1"
     engine          = "mysql"
     engine_version  = "8.0.23"
-    instance_class  = "db.t2.micro"
+    instance_class  = "db.t3.small"
 
     name            = "${var.db_name}"
     username        = "${var.db_username}"
@@ -367,7 +395,7 @@ resource "aws_db_instance" "db_inst_mysql" {
     max_allocated_storage   = 50
     
     # backup_retention_period = 3
-    storage_encrypted       = false # demo purpose
+    storage_encrypted       = true // db.t2.micro not support data encryption
     skip_final_snapshot     = true
 
     vpc_security_group_ids  = ["${aws_security_group.db_inst_sg.id}"]
