@@ -435,10 +435,11 @@ resource "aws_db_instance" "db_inst_mysql" {
     # StorageEncrypted set to 'true', KMS key identifier for encrypted
     storage_encrypted       = true
     kms_key_id              = aws_kms_key.rds.arn
-
     skip_final_snapshot     = true
     vpc_security_group_ids  = ["${aws_security_group.db_inst_sg.id}"]
-    
+
+    iam_database_authentication_enabled = true
+
     # monitoring_interval   = 30
     tags                    = local.tags
 }
