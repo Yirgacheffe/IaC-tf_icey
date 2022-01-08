@@ -1,15 +1,15 @@
 # ------------------------------------------------------------
 # Variables declarations
 # ------------------------------------------------------------
-# variable "aws_access_key" {
-#    description = "AWS account access key."
-#    type        = string
-# }
+variable "aws_access_key" {
+    description = "AWS account access key."
+    type        = string
+}
 
-# variable "aws_secret_key" {
-#     description = "AWS account secret key."
-#     type        = string
-# }
+variable "aws_secret_key" {
+    description = "AWS account secret key."
+    type        = string
+}
 
 variable "aws_region" {
     description = "AWS region to lauch the services."

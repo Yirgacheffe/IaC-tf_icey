@@ -3,7 +3,6 @@
 # AWS account required ... 
 # aws_access_key = "<Your Access Key>"
 # aws_secret_key = "<Your Secret Key>"
-# aws_key_pair   = ""
 
 # region and instance settings
 aws_region     = "ap-southeast-1"

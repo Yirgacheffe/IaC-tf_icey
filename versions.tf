@@ -6,12 +6,4 @@ terraform {
       }
   }
   required_version = ">=0.13.1"
-
-  cloud {
-    organization = "icey"
-
-    workspaces {
-      name = "icey-cicd-action"
-    }
-  }
 }
