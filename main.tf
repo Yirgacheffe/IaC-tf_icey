@@ -130,7 +130,7 @@ resource "aws_launch_template" "app_lt" {
     name_prefix    = "app-lt"
     instance_type  = "${var.inst_type}"
     image_id       = "${var.inst_ami}"
-    key_name       = aws_key_pair.app_inst_kp.key_name
+    # key_name     = aws_key_pair.app_inst_kp.key_name
 
     block_device_mappings {
         device_name = "/dev/sda1"
