@@ -56,6 +56,7 @@ resource "aws_security_group" "web_inst_sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
+    // Template allowed 22, so the server become a Basion host
     ingress {
         description = "Allow SSH from all network"
         from_port   = 22
