@@ -87,7 +87,7 @@ resource "aws_subnet" "database" {
 # ------------------------------------------------------------
 resource "aws_key_pair" "app_inst_kp" {
   key_name   = "app-inst-kp"
-  public_key = file("~/.ssh/ec2_rsa.pub")   # Import key for ssh access
+  public_key = file("${var.ec2_auth_key}")   # Import key for ssh access
 }
 
 resource "aws_launch_template" "web_lt" {

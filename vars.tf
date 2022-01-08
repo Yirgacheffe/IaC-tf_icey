@@ -69,4 +69,11 @@ variable "db_password" {
     description = "DB 'password', provide from ENV."
     type        = string
 }
+
+variable "ec2_auth_key" {
+    description = "RSA public key path, key-pair for EC2."
+    type        = string
+    default     = "~/.ssh/ec2_rsa.pub"
+}
+
 # ------------------------------------------------------------
