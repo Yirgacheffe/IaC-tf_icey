@@ -8,8 +8,6 @@ resource "aws_lb" "web_lb" {
     subnets            = [for value in aws_subnet.public: value.id]
     security_groups    = [aws_security_group.web_lb_sg.id]
     enable_http2       = false
-    
-    enable_deletion_protection = true
 
     tags = {
         Name = format("%s-web-alb", "icey-dev")
