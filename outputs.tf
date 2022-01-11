@@ -35,4 +35,9 @@ output "cache_cluster_address" {
     value       = aws_elasticache_cluster.cache_cluster.cache_nodes
 }
 
+output "bastion_public_ip" {
+    description = "Bastion server IP address"
+    value       = "${aws_instance.bastion.public_ip}"
+}
+
 # ---------------------------------------------------------------------

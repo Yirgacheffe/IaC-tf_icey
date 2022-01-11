@@ -49,20 +49,11 @@ resource "aws_security_group" "web_inst_sg" {
     }
 
     ingress {
-        description = "Allow secure web traffic"
-        from_port   = 443
-        to_port     = 443
-        protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    // Template allowed 22, so the server become a Basion host
-    ingress {
-        description = "Allow SSH from all network"
+        description = "Allow SSH from local network"
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        cidr_blocks = ["${aws_vpc.default.cidr_block}"]
     }
 
     egress {
@@ -158,12 +149,13 @@ resource "aws_security_group" "db_inst_sg" {
         protocol        = "-1"
         cidr_blocks     = ["0.0.0.0/0"]
     }
+
+    tags = local.tags
 }
 
 resource "aws_security_group" "cache_inst_sg" {
     name        = "redis-sg"
     description = "Redis instance server"
-
     vpc_id      = "${aws_vpc.default.id}"
 
     ingress {
@@ -180,6 +172,33 @@ resource "aws_security_group" "cache_inst_sg" {
         protocol        = "-1"
         cidr_blocks     = ["0.0.0.0/0"]
     }
+
+    tags = local.tags
+}
+
+# ------------------------------------------------------------
+
+resource "aws_security_group" "bastion_sg" {
+    name        = "bastion-sg"
+    description = "Bastion instance security group"
+    vpc_id      = "${aws_vpc.default.id}"
+
+    ingress {
+        description = "Allow SSH from all network"
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    tags = local.tags
 }
 
 # ------------------------------------------------------------
