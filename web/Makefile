@@ -10,7 +10,7 @@ build:
 .PHONY: run
 ## run: run 'go run main.go'
 run:
-	go run -race main.go
+	go run main.go
 
 build_and_run: build run
 
