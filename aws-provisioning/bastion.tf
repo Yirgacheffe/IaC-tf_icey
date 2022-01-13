@@ -2,16 +2,19 @@
 # Create "Bastion Server"
 # ------------------------------------------------------------
 
-# resource "aws_key_pair" "app_inst_kp" {
-#     key_name   = "app-inst-kp"
-#     public_key = file("${var.ec2_auth_key}")   # Import key for ssh access
-# }
+resource "aws_key_pair" "bastion_key" {
+    key_name   = "icey-bastion"
+    public_key = file("${var.ec2_auth_key}")
+    
+    tags       = local.tags
+}
 
 resource "aws_instance" "bastion" {
     name = "bastion-server"
 
     instance_type = "${var.inst_type}"
     ami           = "${var.inst_ami}"
+    key_name      = "${aws_key_pair.bastion_key.key_name}"
 
     block_device_mappings {
         device_name     = "/dev/sda1"

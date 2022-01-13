@@ -12,8 +12,6 @@ build:
 run:
 	go run main.go
 
-build_and_run: build run
-
 .PHONY: clean
 ## clean: clean the binary files
 clean:
@@ -21,21 +19,30 @@ clean:
 	go clean
 	rm ${APP}-linux; rm ${APP}-darwin
 
+.PHONY: test
+## test: run 'go test ./...'
 test:
 	go test ./...
 
+.PHONY: test_coverage
+## test_coverage: run 'go test ./... -coverprofile=coverage.out'
 test_coverage:
 	go test ./... -coverprofile=coverage.out
 
+.PHONY: dep
+## dep: run 'go mod download'
 dep:
 	go mod download
 
+.PHONY: vet
+## vet: run 'go vet'
 vet:
 	go vet
 
+.PHONY: lint
+## lint: run 'golangci-lint run --enable-all'
 lint:
 	golangci-lint run --enable-all
-
 
 .PHONY: help
 ## help: print this help message
