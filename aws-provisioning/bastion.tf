@@ -10,18 +10,17 @@ resource "aws_key_pair" "bastion_key" {
 }
 
 resource "aws_instance" "bastion" {
-    name = "bastion-server"
+    ami             = "${var.inst_ami}"
+    instance_type   = "${var.inst_type}"
+    key_name        = "${aws_key_pair.bastion_key.key_name}"
 
-    instance_type = "${var.inst_type}"
-    ami           = "${var.inst_ami}"
-    key_name      = "${aws_key_pair.bastion_key.key_name}"
+    ebs_block_device {
+        device_name = "/dev/sda1"
+        volume_size = 20
+        volume_type = "gp2"
+        encrypted   = true
 
-    block_device_mappings {
-        device_name     = "/dev/sda1"
-        ebs {
-            volume_size = 20 // Giga bytes
-            encrypted   = true
-        }
+        delete_on_termination   = true
     }
 
     vpc_security_group_ids      = ["${aws_security_group.bastion_sg.id}"]
