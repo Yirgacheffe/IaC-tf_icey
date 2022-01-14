@@ -14,3 +14,14 @@ To sun this you need to execute:
 ## Others
 
 TBD...
+
+## Tips
+
+```bash
+eval ${ssh-agent -s}
+
+ssh-add <${YOUR_PRIVATE_KEY}>
+ssh-add -L
+
+ssh -A ${USER}@${SERVER_IP}
+```
