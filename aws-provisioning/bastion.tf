@@ -13,14 +13,13 @@ resource "aws_instance" "bastion" {
     ami             = "${var.inst_ami}"
     instance_type   = "${var.inst_type}"
     
-
-    ebs_block_device {
-        device_name = "/dev/sda1"
-        volume_size = 20
-        volume_type = "gp2"
-        encrypted   = true
-        delete_on_termination = true
-    }
+#    ebs_block_device {
+#        device_name = "/dev/sda1"
+#        volume_size = 20
+#        volume_type = "gp2"
+#        encrypted   = true
+#        delete_on_termination = true
+#    }
 
     vpc_security_group_ids      = ["${aws_security_group.bastion_sg.id}"]
     subnet_id                   = aws_subnet.public["${local.zone_a}"].id
