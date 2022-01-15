@@ -13,9 +13,9 @@ USE `icey_DB`;
 --
 -- Table structure for table `ORDER` -------------------------------------------------------------------
 --
-DROP TABLE IF EXISTS `ORDERS`;
+DROP TABLE IF EXISTS `ORDER`;
 
-CREATE TABLE `ORDERS` (
+CREATE TABLE `ORDER` (
   ID                    INT                       NOT NULL AUTO_INCREMENT,
   ADDRESS               VARCHAR(100)              NOT NULL,
   NAME                  VARCHAR(50)               NOT NULL,

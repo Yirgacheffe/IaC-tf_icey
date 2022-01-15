@@ -7,8 +7,6 @@
 --
 -- Initialized data for table `ORDER` ------------------------------------------------------------------
 --
-USE `icey_DB`;
-
-INSERT INTO ORDERS ( ADDRESS, NAME, AMOUNT ) VALUES ( '天津滨海新区竹华里701', 'Annie.Liu', 34324.65 );
+INSERT INTO ORDER ( ADDRESS, NAME, AMOUNT ) VALUES ( '天津滨海新区竹华里701', 'Annie.Liu', 34324.65 );
 
 -- -----------------------------------------------------------------------------------------------------

@@ -2,7 +2,9 @@
 
 # Prepare binary file and launch scripts
 BIN_DIR="db-binary"
-mkdir ${BIN_DIR}
+
+rm -rf ${BIN_DIR}
+mkdir  ${BIN_DIR}
 
 cp 0*.sql        ${BIN_DIR}
 cp mysql_conn.sh ${BIN_DIR}
