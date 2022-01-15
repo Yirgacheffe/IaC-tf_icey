@@ -2,7 +2,9 @@
 
 # Prepare binary file and launch scripts
 BIN_DIR="web-binary"
-mkdir ${BIN_DIR}
+
+rm -rf ${BIN_DIR}
+mkdir  ${BIN_DIR}
 
 cp web-demo-linux ${BIN_DIR}
 cp launch.sh      ${BIN_DIR}

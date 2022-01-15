@@ -2,7 +2,9 @@
 
 # Prepare binary file and launch scripts
 BIN_DIR="api-binary"
-mkdir ${BIN_DIR}
+
+rm -rf ${BIN_DIR}
+mkdir  ${BIN_DIR}
 
 cp api-demo-linux ${BIN_DIR}
 cp launch.sh      ${BIN_DIR}
