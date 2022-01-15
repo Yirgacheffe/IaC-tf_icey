@@ -4,8 +4,8 @@ APP=api-demo
 ## build: Build the application
 build:
 	@echo "Building..."
-	GOARCH=amd64 GOOS=linux  CGO_ENABLED=0 go build -ldflags="-w -s" -o ${APP}-linux  main.go
-	GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 go build -ldflags="-w -s" -o ${APP}-darwin main.go
+	GOARCH=amd64 GOOS=linux  CGO_ENABLED=0 go build -ldflags="-w -s" -o ${APP}-linux  main.go driver.go
+	GOARCH=amd64 GOOS=darwin CGO_ENABLED=0 go build -ldflags="-w -s" -o ${APP}-darwin main.go driver.go
 
 .PHONY: run
 ## run: run 'go run main.go'

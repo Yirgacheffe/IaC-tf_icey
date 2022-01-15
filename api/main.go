@@ -11,12 +11,20 @@ import (
 	"time"
 )
 
-type Note struct {
-	Title string `json:"title,omitempty"`
-	Body  string `json:"body,omitempty"`
+const (
+	query = "SELECT ID, ADDRESS, NAME, AMOUNT, CREATED_AT, UPDATED_AT FROM ORDERS WHERE ID=?"
+)
+
+type Order struct {
+	ID        int       `json:"id"`
+	Address   string    `json:"address"`
+	Name      string    `json:"name"`
+	Amount    float32   `json:"amount"`
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 
-func Run(wait time.Duration, addr string) error {
+func Run(wait time.Duration, addr string, db *DB) error {
 	log.Println("start server...")
 
 	// Http server and simple route to api
@@ -27,15 +35,32 @@ func Run(wait time.Duration, addr string) error {
 			return
 		}
 
-		note := Note{
-			Title: "Buy food.",
-			Body:  "Buy apple, tomato, rice after covid PRN.",
+		// Prepare statement
+		stmt, err := db.SQL.Prepare(query)
+		if err != nil {
+			http.Error(w, "404 not found", http.StatusNotFound)
+			return
 		}
 
-		j, err := json.Marshal(note)
+		defer stmt.Close()
+
+		// Do query and set value
+		o := Order{}
+		id := 1
+
+		row := stmt.QueryRow(id)
+		err = row.Scan(&o.ID, &o.Address, &o.Name, &o.Amount, &o.CreatedAt, &o.UpdatedAt)
 		if err != nil {
-			panic(err) // panic here as this handler is the only one
+			http.Error(w, "404 not found", http.StatusNotFound)
+			return
 		}
+
+		j, err := json.Marshal(o)
+		if err != nil {
+			http.Error(w, "500 json marshal error", http.StatusInternalServerError)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
 		w.Write(j)
 	})
@@ -74,6 +99,13 @@ func Run(wait time.Duration, addr string) error {
 	return nil
 }
 
+func getEnv(key, fallback string) string {
+	if v, ok := os.LookupEnv(key); ok {
+		return v
+	}
+	return fallback
+}
+
 func main() {
 	var (
 		wait time.Duration
@@ -85,7 +117,20 @@ func main() {
 
 	flag.Parse()
 
-	err := Run(wait, addr)
+	// Database variables
+	dbUser := getEnv("DB_USER", "admin")
+	dbPass := getEnv("DB_PASS", "admin")
+	dbHost := getEnv("DB_HOST", "127.0.0.1")
+	dbPort := getEnv("DB_PORT", "3306")
+	dbName := getEnv("DB_NAME", "icey_DB")
+
+	db, err := ConnectSQL(dbHost, dbPort, dbUser, dbPass, dbName)
+	if err != nil {
+		log.Printf("No DB connections: %v\n", err)
+		os.Exit(-1)
+	}
+
+	err = Run(wait, addr, db)
 	if err != nil {
 		log.Fatal("error while start app", err)
 	}
