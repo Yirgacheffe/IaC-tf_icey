@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sudo ./api-demo-linux -addr=":80"
+sudo -E ./api-demo-linux -addr=":80"

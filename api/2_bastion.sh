@@ -8,6 +8,7 @@ mkdir  ${BIN_DIR}
 
 cp api-demo-linux ${BIN_DIR}
 cp launch.sh      ${BIN_DIR}
+cp db-env.sh      ${BIN_DIR}
 
 # Copy to bastion
 scp -r ${BIN_DIR} ubuntu@13.212.61.74:~/
