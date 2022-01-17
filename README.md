@@ -25,7 +25,7 @@ To sun this you need to execute:
     ```
 - Build and deploy project `api` into EC2 application instance.
     ```bash
-     # Make binary, copy to target server, then jump
+    # Make binary, copy to target server, then jump
     make build
     sh 2_bastion.sh
 
