@@ -21,7 +21,7 @@ resource "aws_db_instance" "db_inst_mysql" {
     storage_type    = "gp2"
 
     # set multi_za to true enabled standby mode
-    # multi_az      = true
+    # multi_az        = true
 
     db_subnet_group_name    = "${aws_db_subnet_group.db_subnet_grp.name}"
 
