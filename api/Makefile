@@ -1,4 +1,5 @@
 APP=api-demo
+COMMIT_SHA=${shell git rev-parse --short HEAD}
 
 .PHONY: build
 ## build: Build the application
